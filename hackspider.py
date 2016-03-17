@@ -27,6 +27,8 @@ def getIcp(url):
     :return: Array
 
     """
+    url = get_tld(url)
+    arr = []
     s = requests.session()
     r = s.get('http://icp.chinaz.com/info?q=' + url, headers=headers, timeout=20)
     n = "class=\"by1\">(.*)</td>"
@@ -34,9 +36,10 @@ def getIcp(url):
     if r.text.find('错误') == -1:
         name = re.findall(n, r.text)
         num = re.findall(b, r.text)
-        print(url, '公司：', name[0], "网站名：", num[1], "备案号：", name[2])
+        arr = [name[0], num[1], name[2]]
+        return arr
     else:
-        print(url, '未备案')
+        return arr
 
 
 def getHack(hack):
@@ -105,13 +108,14 @@ def getHack(hack):
 
 def Verify(url):
     s = requests.session()
-    r = s.get(url, headers=headers, timeout=20)
-    if r.status_code == 200 and r.text != '':
-        return r.text
-    elif r.text == '':
-        return 'null'
-    else:
-        return r.status_code
+    data = {'url': url}
+    fi = "<div class=\"fr zTContrig\"><span>(.*)</span></div></li><li class=\"bor-b1s bg-list clearfix\">" \
+         "<div class=\"fl zTContleft\">返回状态码</div><div class=\"fr zTContrig\"><span>(.*)</span></div></li>"
+    r = s.get("http://tool.chinaz.com/pagestatus/", data=data, headers=headers, timeout=20)
+    if r.text.find("检测结果") != -1:
+        ret = re.findall(fi, r.text)
+        for ser in ret:
+            return ser
 
 
 def getPic(url):
@@ -129,7 +133,7 @@ def getPic(url):
         else:
             os.mkdir("./img/" + dir + "/")
 
-    na = str(str(tm) + ' ' + url + '.jpg').replace('http://', '').replace('https://', '').replace(':', ' ')\
+    na = str(str(tm) + ' ' + url + '.jpg').replace('http://', '').replace('https://', '').replace(':', ' ') \
         .replace('/', '_').replace('?', '%3F')
     browser = webdriver.Chrome()
     browser.set_page_load_timeout(20)
@@ -147,5 +151,8 @@ def getPic(url):
 
 urlArr = getHack(1)
 for a in urlArr:
-    print(a)
+    ser = Verify(a)
+    icp = getIcp(a)
+    print(icp)
+    print(a, "ip:", ser[0], "status:", ser[1])
 # getpic('http://status.zer.moe:89/webstatus/hebei')
