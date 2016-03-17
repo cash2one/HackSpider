@@ -6,7 +6,6 @@ from tld import get_tld
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 
-
 hackertime = "<td width=\"12%\"><b style=\"color:#0BA81E;\">(.*)</td>"
 hackerurl = "<td width=\"58%\" style=\"word-break:break-all\"><a href=\"(.*)\" target=\"_blank\""
 hackcntime = "<td width=\"16%\">(.*)</td>"
@@ -93,9 +92,9 @@ def getHack(hack):
                     url = "http://www.hack-cn.com/" + str(allurl[i])
                     s = requests.session()
                     r = s.get(url, headers=headers, timeout=20)
-                    allurl = re.findall(hackcnu, r.text)
-                    allurl = re.findall(hackcnurl, allurl[0])
-                    urlArr.append(allurl[0])
+                    blackurl = re.findall(hackcnu, r.text)
+                    blackurl = re.findall(hackcnurl, blackurl[0])
+                    urlArr.append(blackurl[0])
                 else:
                     RUN = False
                     print(time.strftime("%H:%M:%S", time.localtime()), "Over")
@@ -117,11 +116,15 @@ def Verify(url):
     r = s.get("http://tool.chinaz.com/pagestatus/", data=data, headers=headers, timeout=20)
     if r.text.find("检测结果") != -1:
         ret = re.findall(fi, r.text)
-        for ser in ret:
+        for ser in ret:  #########
             return ser
+    else:
+        ser = []
+        return ser
 
 
 def getPic(url):
+    return url
     tm = time.strftime("%m-%d %H-%M-%S", time.localtime())
     dire = time.strftime("%m-%d", time.localtime())
     if os.path.exists("./img/"):
@@ -153,21 +156,24 @@ def echo(urlArr):
     for a in urlArr:
         print(a, "查询状态...")
         ser = Verify(a)
-        print(a, "查询备案...")
-        icp = getIcp(a)
-        if ser[1] != '404':
-            print(a, "获取截图...")
-            pic = getPic(a)
-            if not icp:
-                print(a, "Ip:", ser[0], "Status:", ser[1], "没有备案", "Screenshot:", pic)
+        if not ser:
+            if ser[1] != '404':
+                print(a, "查询备案...")
+                icp = getIcp(a)
+                print(a, "获取截图...")
+                pic = getPic(a)
+                if not icp:
+                    print(a, "Ip:", ser[0], "Status:", ser[1], "没有备案", "Screenshot:", pic)
+                else:
+                    print(a, "Ip:", ser[0], "Status:", ser[1], "Com:", icp[0], "Name:", icp[1], "Number:", icp[2],
+                          "Property:", icp[3], "Screenshot:", pic)
             else:
-                print(a, "Ip:", ser[0], "Status:", ser[1], "Com:", icp[0], "Name:", icp[1], "Number:", icp[2], "Property:", icp[3], "Screenshot:", pic)
+                print(a, "地址404,跳过...")
         else:
-            print(a, "地址404,跳过...")
+            print(a, "无法解析或访问,跳过...")
+
     print('done')
 
 
-echo(getHack(1))
+# echo(getHack(1))
 echo(getHack(2))
-
-
