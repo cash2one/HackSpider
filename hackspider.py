@@ -3,13 +3,10 @@ import re
 import time
 import os
 from tld import get_tld
-from urllib.parse import urlparse
-import socket
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 
-# url = "http://icp.chinaz.com/searchs"
-# data = {'urls': 'qq.com', 'btn_search': '查询'}
+
 hackertime = "<td width=\"12%\"><b style=\"color:#0BA81E;\">(.*)</td>"
 hackerurl = "<td width=\"58%\" style=\"word-break:break-all\"><a href=\"(.*)\" target=\"_blank\""
 hackcntime = "<td width=\"16%\">(.*)</td>"
@@ -25,6 +22,10 @@ def getIcp(url):
     """
     :param url: String
     :return: Array
+    Arr[单位名称,网站名称,备案号,备案性质]
+
+    # url = "http://icp.chinaz.com/searchs"
+    # data = {'urls': 'qq.com', 'btn_search': '查询'}
 
     """
     url = get_tld(url)
@@ -33,10 +34,12 @@ def getIcp(url):
     r = s.get('http://icp.chinaz.com/info?q=' + url, headers=headers, timeout=20)
     n = "class=\"by1\">(.*)</td>"
     b = "class=\"by1\" width=\"30%\">(.*)</td>"
+    by = "<td align=\"left\" class=\"by2\">(.*)</td>"
     if r.text.find('错误') == -1:
         name = re.findall(n, r.text)
         num = re.findall(b, r.text)
-        arr = [name[0], num[1], name[2]]
+        by = re.findall(by, r.text)
+        arr = [name[0], num[1], name[2], by[0]]
         return arr
     else:
         return arr
@@ -120,18 +123,14 @@ def Verify(url):
 
 def getPic(url):
     tm = time.strftime("%m-%d %H-%M-%S", time.localtime())
-    dir = time.strftime("%m-%d", time.localtime())
+    dire = time.strftime("%m-%d", time.localtime())
     if os.path.exists("./img/"):
-        if os.path.exists("./img/" + dir + "/"):
-            print("dir")
-        else:
-            os.mkdir("./img/" + dir + "/")
+        if not os.path.exists("./img/" + dire + "/"):
+            os.mkdir("./img/" + dire + "/")
     else:
         os.mkdir("./img/")
-        if os.path.exists("./img/" + dir + "/"):
-            print("dir")
-        else:
-            os.mkdir("./img/" + dir + "/")
+        if not os.path.exists("./img/" + dire + "/"):
+            os.mkdir("./img/" + dire + "/")
 
     na = str(str(tm) + ' ' + url + '.jpg').replace('http://', '').replace('https://', '').replace(':', ' ') \
         .replace('/', '_').replace('?', '%3F')
@@ -140,19 +139,35 @@ def getPic(url):
     browser.implicitly_wait(20)
     try:
         browser.get(url)
-        browser.save_screenshot("./img/" + dir + "/" + na)
+        browser.save_screenshot("./img/" + dire + "/" + na)
         browser.quit()
     except TimeoutException:
         print('time out after 20 seconds when loading page')
-        browser.save_screenshot("./img/" + dir + "/" + na)
+        browser.save_screenshot("./img/" + dire + "/" + na)
         browser.quit()
         browser.execute_script('window.stop()')
+    return na
 
 
-urlArr = getHack(1)
-for a in urlArr:
-    ser = Verify(a)
-    icp = getIcp(a)
-    print(icp)
-    print(a, "ip:", ser[0], "status:", ser[1])
-# getpic('http://status.zer.moe:89/webstatus/hebei')
+def echo(urlArr):
+    for a in urlArr:
+        print(a, "查询状态...")
+        ser = Verify(a)
+        print(a, "查询备案...")
+        icp = getIcp(a)
+        if ser[1] != '404':
+            print(a, "获取截图...")
+            pic = getPic(a)
+            if not icp:
+                print(a, "Ip:", ser[0], "Status:", ser[1], "没有备案", "Screenshot:", pic)
+            else:
+                print(a, "Ip:", ser[0], "Status:", ser[1], "Com:", icp[0], "Name:", icp[1], "Number:", icp[2], "Property:", icp[3], "Screenshot:", pic)
+        else:
+            print(a, "地址404,跳过...")
+    print('done')
+
+
+echo(getHack(1))
+echo(getHack(2))
+
+
