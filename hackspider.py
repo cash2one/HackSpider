@@ -2,6 +2,9 @@ import requests
 import re
 import time
 import os
+import IP
+from urllib.parse import urlparse
+import socket
 from tld import get_tld
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -19,6 +22,7 @@ def isLINUX():
         LINUX = True
     else:
         print('系统无法识别可能无法截图.')
+
 
 # 判断是否为LINUX
 isLINUX()
@@ -38,6 +42,7 @@ HEADER = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36
 
 def getIcp(url):
     """
+    # 获取网站备案
     :param url: String
     :return: Array
     Arr[单位名称,网站名称,备案号,备案性质]
@@ -65,6 +70,7 @@ def getIcp(url):
 
 def getHack(hack):
     """
+    # 获取今日被黑网页
     :param hack: Int
         1->www.hac-ker.net
         2->www.hack-cn.com
@@ -127,25 +133,10 @@ def getHack(hack):
     return urlArr
 
 
-def Verify(url):
-    """
-    调用站长之家获取网站IP和状态码
-    """
-    s = requests.session()
-    data = {'url': url}
-    fi = "<div class=\"fr zTContrig\"><span>(.*)</span></div></li><li class=\"bor-b1s bg-list clearfix\">" \
-         "<div class=\"fl zTContleft\">返回状态码</div><div class=\"fr zTContrig\"><span>(.*)</span></div></li>"
-    r = s.get("http://tool.chinaz.com/pagestatus/", data=data, headers=HEADER, timeout=TIMEOUT)
-    if r.text.find("检测结果") != -1:
-        ret = re.findall(fi, r.text)
-        return ret
-    else:
-        ser = []
-        return ser
-
 
 def getPic(url):
     """
+    # 获取网站截图
     Windows调用chromedriver.exe截图
     Linux调用CutyCapt截图 (需预先安装)(Ubuntu14.04下测试正常)
     :param url: http://google.com
@@ -190,30 +181,73 @@ def getPic(url):
 
 def echo(urlArr):
     """
-    获取Url的IP 响应码 备案 以及截图
+    # 获取Url的IP 响应码 备案 以及截图
     :type urlArr: Url数组
     """
     for a in urlArr:
         print(a, "查询状态...")
         ser = Verify(a)
-        if not ser:
-            print(a, "无法解析或访问,跳过...")
-        else:
-            print(ser)
-            if ser[0][1] != '404':
-                print(a, "查询备案...")
-                icp = getIcp(a)
-                print(a, "获取截图...")
-                pic = getPic(a)
-                if not icp:
-                    print(a, "Ip:", ser[0][0], "Status:", ser[0][1], "没有备案", "Screenshot:", pic)
-                else:
-                    print(a, "Ip:", ser[0][0], "Status:", ser[0][1], "Com:", icp[0], "Name:", icp[1], "Number:", icp[2],
-                          "Property:", icp[3], "Screenshot:", pic)
+        if ser:
+            print(a, "查询备案...")
+            icp = getIcp(a)
+            print(a, "获取截图...")
+            pic = getPic(a)
+            if not icp:
+                print(a, "Ip:", ser[0], "city:", ser[1], "没有备案", "Screenshot:", pic)
             else:
-                print(a, "地址404,跳过...")
+                print(a, "Ip:", ser[0], "city:", ser[1], "Com:", icp[0], "Name:", icp[1], "Number:", icp[2],
+                      "Property:", icp[3], "Screenshot:", pic)
+        else:
+            print(a, "无法访问，跳过...")
     print('done')
 
 
-# echo(getHack(1))
+def Verify(url):
+    """
+    # 验证网站
+    :param url:
+    :return:
+    """
+    doom = isCHINA(url)
+    if doom:
+        try:
+            s = requests.session()
+            r = s.head(url, headers=HEADER, timeout=TIMEOUT)
+            if r.find("200") != -1 or r.find("301") != -1 or r.find("302") != -1:
+                return doom
+            else:
+                return False
+        except Exception:
+            return False
+    else:
+        return False
+
+
+def getDomain(url):
+    return urlparse(url, scheme='', allow_fragments=True).netloc
+
+
+def isCHINA(url):
+    """
+    # 获取IP 并判断是否为国内网站 返回IP和归属地
+    :param url:
+    :return:
+    """
+    ret = []
+    try:
+        ip = socket.gethostbyname(getDomain(url))
+        ser = IP.find(ip)
+        if not ser:
+            return
+        else:
+            if ser.find('中国') != -1:
+                ret.append(ip)
+                ret.append(ser)
+                return ret
+            else:
+                return
+    except Exception:
+        return
+
+echo(getHack(1))
 echo(getHack(2))
