@@ -212,7 +212,8 @@ def Verify(url):
     if doom:
         try:
             s = requests.session()
-            r = s.head(url, headers=HEADER, timeout=TIMEOUT)
+            r = str(s.head(url, headers=HEADER, timeout=TIMEOUT))
+            print(r)
             if r.find("200") != -1 or r.find("301") != -1 or r.find("302") != -1:
                 return doom
             else:
@@ -240,7 +241,7 @@ def isCHINA(url):
         if not ser:
             return
         else:
-            if ser.find('中国') != -1:
+            if ser.find('中国') != -1 or ser.find('香港') != -1:
                 ret.append(ip)
                 ret.append(ser)
                 return ret
