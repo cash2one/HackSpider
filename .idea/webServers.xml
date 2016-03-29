@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="db7c4b2a-e38f-414f-9ac5-574bdc78c908" name="ali.sasami.moe" url="http://ali.sasami.moe">
+        <fileTransfer host="ali.sasami.moe" port="22" rootFolder="/home/py" accessType="SFTP" username="root">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
