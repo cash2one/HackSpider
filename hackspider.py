@@ -31,6 +31,7 @@ class Hack_spider(Base):  # 分组表
     time = Column(Integer)  # 时间
     pic = Column(String(500))  # 快照路径
     origin = Column(String(20))  # 采集来源
+    locate = Column(String(500))  # 定位
 
 
 class hackspider:
@@ -91,18 +92,22 @@ class hackspider:
         except Exception as e:
             print(e)
         arr = []
-        s = requests.session()
-        r = s.get('http://icp.chinaz.com/info?q=' + url, headers=self.HEADER, timeout=self.TIMEOUT)
-        n = "class=\"by1\">(.*)</td>"
-        b = "class=\"by1\" width=\"30%\">(.*)</td>"
-        by = "<td align=\"left\" class=\"by2\">(.*)</td>"
-        if r.text.find('错误') == -1:
-            name = re.findall(n, r.text)
-            num = re.findall(b, r.text)
-            by = re.findall(by, r.text)
-            arr = [name[0], num[1], name[2], by[0]]
-            return arr
-        else:
+        try:
+            s = requests.session()
+            r = s.get('http://icp.chinaz.com/info?q=' + url, headers=self.HEADER, timeout=self.TIMEOUT)
+            n = "class=\"by1\">(.*)</td>"
+            b = "class=\"by1\" width=\"30%\">(.*)</td>"
+            by = "<td align=\"left\" class=\"by2\">(.*)</td>"
+            if r.text.find('错误') == -1:
+                name = re.findall(n, r.text)
+                num = re.findall(b, r.text)
+                by = re.findall(by, r.text)
+                arr = [name[0], num[1], name[2], by[0]]
+                return arr
+            else:
+                return arr
+        except Exception as e:
+            print(e)
             return arr
 
     def getHack(self, hack, last):
@@ -111,6 +116,7 @@ class hackspider:
         :param hack: Int
             1->www.hac-ker.net
             2->www.hack-cn.com
+               last:上次获取到的最后一条信息(采集到这条为止)
         :return: Array
             UrlArray
         """
@@ -124,14 +130,17 @@ class hackspider:
             if hack == 1:
                 print(time.strftime("%H:%M:%S", time.localtime()), "第" + str(COUNT) + "页读取开始请稍候...")
                 url = "http://www.hac-ker.net/?page=" + str(COUNT)
-                r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
+                try:
+                    r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
+                except Exception as e:
+                        print(e)
                 print(time.strftime("%H:%M:%S", time.localtime()), "hacker读取完毕,开始处理.")
                 allurl = re.findall(self.hackerurl, r.text)
                 i = 0
 
                 for a in allurl:
                     if a != last:
-                        urlArr.append(a)
+                        urlArr.append([a, a])
                     else:
                         RUN = False
                         print(time.strftime("%H:%M:%S", time.localtime()), "Url读取完毕")
@@ -142,19 +151,26 @@ class hackspider:
             elif hack == 2:
                 print(time.strftime("%H:%M:%S", time.localtime()), "第" + str(COUNT) + "页读取开始请稍候...")
                 url = "http://www.hack-cn.com/?page=" + str(COUNT)
-
-                r = s.get(url, headers=self.HEADER)
+                try:
+                    r = s.get(url, headers=self.HEADER)
+                except Exception as e:
+                        print(e)
                 print(time.strftime("%H:%M:%S", time.localtime()), "hackcn列表读取完毕,开始读取Url.")
                 allurl = re.findall(self.hackcnweb, r.text)
                 i = 0
 
                 for a in allurl:
-                    if a != last:
-                        url = "http://www.hack-cn.com/" + str(a)
-                        r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
-                        blackurl = re.findall(self.hackcnu, r.text)
-                        blackurl = re.findall(self.hackcnurl, blackurl[0])
-                        urlArr.append(blackurl[0])
+                    try:
+                        m = re.findall('(\w*[0-9]+)\w*', a)
+                        if m[0] != last:
+                            url = "http://www.hack-cn.com/" + str(a)
+                            r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
+                            blackurl = re.findall(self.hackcnu, r.text)
+                            blackurl = re.findall(self.hackcnurl, blackurl[0])
+                            urlArr.append([blackurl[0], m[0]])
+                    except Exception as e:
+                        print(e)
+
                     else:
                         RUN = False
                         print(time.strftime("%H:%M:%S", time.localtime()), "Url读取完毕")
@@ -162,6 +178,76 @@ class hackspider:
                         return urlArr
                     i += 1
                 COUNT += 1
+            else:
+                RUN = False
+                break
+        urlArr.reverse()
+        return urlArr
+
+    def getPageHack(self, hack, page):
+        """
+        # 按页面数获取被黑页面 用于初始化
+        :param hack: Int
+            1->www.hac-ker.net
+            2->www.hack-cn.com
+               page:采集指定的页面数量
+        :return: Array
+            UrlArray
+        """
+        global RUN
+        global COUNT
+        RUN = True
+        COUNT = 1  # 页
+        urlArr = []
+        s = requests.session()
+        while RUN:
+            if hack == 1:
+                print(time.strftime("%H:%M:%S", time.localtime()), "第" + str(COUNT) + "页读取开始请稍候...")
+                url = "http://www.hac-ker.net/?page=" + str(COUNT)
+                try:
+                    r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
+                except Exception as e:
+                    print(e)
+                print(time.strftime("%H:%M:%S", time.localtime()), "hacker读取完毕,开始处理.")
+                allurl = re.findall(self.hackerurl, r.text)
+                for a in allurl:
+                    urlArr.append([a, a])
+
+                COUNT += 1
+
+                if COUNT > page:
+                    RUN = False
+                    print(time.strftime("%H:%M:%S", time.localtime()), "Url读取完毕")
+                    urlArr.reverse()
+                    return urlArr
+
+            elif hack == 2:
+                print(time.strftime("%H:%M:%S", time.localtime()), "第" + str(COUNT) + "页读取开始请稍候...")
+                url = "http://www.hack-cn.com/?page=" + str(COUNT)
+                try:
+                    r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
+                except Exception as e:
+                    print(e)
+                print(time.strftime("%H:%M:%S", time.localtime()), "hackcn列表读取完毕,开始读取Url.")
+                allurl = re.findall(self.hackcnweb, r.text)
+
+                for a in allurl:
+                    try:
+                        m = re.findall('(\w*[0-9]+)\w*', a)
+                        url = "http://www.hack-cn.com/" + str(a)
+                        r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
+                        blackurl = re.findall(self.hackcnu, r.text)
+                        blackurl = re.findall(self.hackcnurl, blackurl[0])
+                        urlArr.append([blackurl[0], m[0]])
+                    except Exception as e:
+                        print(e)
+                COUNT += 1
+
+                if COUNT > page:
+                    RUN = False
+                    print(time.strftime("%H:%M:%S", time.localtime()), "Url读取完毕")
+                    urlArr.reverse()
+                    return urlArr
             else:
                 RUN = False
                 break
@@ -176,6 +262,7 @@ class hackspider:
         :param url: http://google.com
         """
         # tm = time.strftime("%m-%d %H-%M-%S", time.localtime())
+        tm = time.strftime("%H-%M-%S", time.localtime())
         dire = time.strftime("%m-%d", time.localtime())
         if os.path.exists("./hackimg/"):
             if not os.path.exists("./hackimg/" + dire + "/"):
@@ -187,7 +274,7 @@ class hackspider:
 
         # na = str(str(tm) + ' ' + url + '.png').replace('http://', '').replace('https://', '').replace(':', ' ') \
         #     .replace('/', '_').replace('?', '%3F')
-        na = self.getDomain(url) + '.png'
+        na = tm + self.getDomain(url) + '.png'
         na = "./hackimg/" + dire + "/" + na
 
         if not self.LINUX:
@@ -221,36 +308,37 @@ class hackspider:
         :type urlArr: Url数组
         """
         for a in urlArr:
-            print(a, "查询状态...")
-            ser = self.Verify(a)
+            print(a[0], "查询状态...")
+            ser = self.Verify(a[0])
             if ser:
-                print(a, "查询备案...")
-                icp = self.getIcp(a)
+                print(a[0], "查询备案...")
+                icp = self.getIcp(a[0])
                 if self.PRTSC:
-                    print(a, "获取截图...")
-                    pic = self.getPic(a)
+                    print(a[0], "获取截图...")
+                    pic = self.getPic(a[0])
                 else:
                     pic = ""
                 if not icp:
                     if self.SAVE_SQL:
-                        self.addsql(self.getDomain(a), a, ser[0], "", "", "", "", ser[1], time.time(), pic, hackOrigin)
-                        print(a, "Domain:", self.getDomain(a), "Ip:", ser[0], "city:", ser[1], "没有备案", "Screenshot:",
-                              pic)
+                        self.addsql(self.getDomain(a[0]), a[0], ser[0], "无", "", "", "", ser[1], time.time(), pic,
+                                    hackOrigin, a[1])
+                        print(a[0], "Domain:", self.getDomain(a[0]), "Ip:", ser[0], "city:", ser[1], "没有备案",
+                              "Screenshot:", pic)
                     else:
-                        print(a, "Domain:", self.getDomain(a), "Ip:", ser[0], "city:", ser[1], "没有备案", "Screenshot:",
-                              pic)
+                        print(a[0], "Domain:", self.getDomain(a[0]), "Ip:", ser[0], "city:", ser[1], "没有备案",
+                              "Screenshot:", pic)
                 else:
                     if self.SAVE_SQL:
                         # domain, hackweb, ip, icp, icp_name, icp_webname, icp_st, city, time, pic, origin
-                        self.addsql(self.getDomain(a), a, ser[0], icp[2], icp[0], icp[1], icp[3], ser[1], time.time(),
-                               pic, hackOrigin)
-                        print(a, "Domain:", self.getDomain(a), "Ip:", ser[0], "city:", ser[1], "Com:", icp[0], "Name:",
-                              icp[1], "Number:", icp[2], "Property:", icp[3], "Screenshot:", pic)
+                        self.addsql(self.getDomain(a[0]), a[0], ser[0], icp[2], icp[0], icp[1], icp[3], ser[1],
+                                    time.time(), pic, hackOrigin, a[1])
+                        print(a[0], "Domain:", self.getDomain(a[0]), "Ip:", ser[0], "city:", ser[1], "Com:", icp[0],
+                              "Name:", icp[1], "Number:", icp[2], "Property:", icp[3], "Screenshot:", pic)
                     else:
-                        print(a, "Domain:", self.getDomain(a), "Ip:", ser[0], "city:", ser[1], "Com:", icp[0], "Name:",
-                              icp[1], "Number:", icp[2], "Property:", icp[3], "Screenshot:", pic)
+                        print(a[0], "Domain:", self.getDomain(a[0]), "Ip:", ser[0], "city:", ser[1], "Com:", icp[0],
+                              "Name:", icp[1], "Number:", icp[2], "Property:", icp[3], "Screenshot:", pic)
             else:
-                print(a, "无法访问或者不是国内网站,跳过...")
+                print(a[0], "无法访问或者不是国内网站,跳过...")
         print('done')
 
     def Verify(self, url):
@@ -264,8 +352,7 @@ class hackspider:
             try:
                 s = requests.session()
                 r = s.head(url, headers=self.HEADER, timeout=self.TIMEOUT)
-
-                if r.status_code != 200 or r.status_code != 301 or r.status_code != 302:
+                if r.status_code == 200:
                     return doom
                 else:
                     return False
@@ -292,7 +379,10 @@ class hackspider:
             else:
                 if ser.find('中国') != -1:
                     ret.append(ip)
-                    ret.append(ser)
+                    if ser.find("\t") == 2:
+                        ret.append(re.findall("\t(.*)\t", ser))
+                    else:
+                        ret.append(re.findall("\t(.*)", ser))
                     return ret
                 else:
                     return
@@ -300,7 +390,7 @@ class hackspider:
             print(e)
             return
 
-    def addsql(self, domain, hackweb, ip, icp, icp_name, icp_webname, icp_st, city, time, pic, origin):
+    def addsql(self, domain, hackweb, ip, icp, icp_name, icp_webname, icp_st, city, time, pic, origin, locate):
         """
         # 存入数据库
         """
@@ -308,7 +398,7 @@ class hackspider:
             session = self.DBSession()
             sql = Hack_spider(domain=domain, hackweb=hackweb, ip=ip, icp=icp, icp_name=icp_name,
                               icp_webname=icp_webname,
-                              icp_st=icp_st, city=city, time=int(time), pic=pic, origin=origin)
+                              icp_st=icp_st, city=city, time=int(time), pic=pic, origin=origin, locate=locate)
             session.add(sql)
             session.commit()
             session.close()
@@ -322,22 +412,17 @@ class hackspider:
         session = self.DBSession()
         query = session.query(Hack_spider)
         ret = query.filter(Hack_spider.origin == origin).order_by(Hack_spider.id.desc()).first()
-        return ret.hackweb
-
+        return ret.locate
 
 if __name__ == '__main__':
+
     sp = hackspider()
-    sp.SAVE_SQL = False
-    sp.PRTSC = False
+    # sp.SAVE_SQL = False
+    # sp.PRTSC = False
+    sp.echo(sp.getPageHack(1, 10), "1")
+    sp.echo(sp.getPageHack(2, 10), "2")
+    # print(sp.getlastsql("1"))
+    # print(sp.getlastsql("2"))
+    # sp.echo(sp.getHack(1, sp.getlastsql("1")), "1")
+    # sp.echo(sp.getHack(2, sp.getlastsql("2")), "2")
 
-    origin = sp.getlastsql("1")
-    print(origin)
-    sp.echo(sp.getHack(1, origin), "1")
-
-'''
-
-    sp.echo(sp.getHack(1), "1")
-    sp.echo(sp.getHack(2), "2")
-    '''
-# echo(getHack(1))
-# echo(getHack(2))
