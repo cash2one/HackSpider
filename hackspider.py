@@ -259,6 +259,7 @@ class hackspider:
         # 获取网站截图
         Windows调用chromedriver.exe截图
         Linux调用CutyCapt截图 (需预先安装)(Ubuntu14.04下测试正常)
+                Imagemagick处理图像生成缩略图
         :param url: http://google.com
         """
         # tm = time.strftime("%m-%d %H-%M-%S", time.localtime())
@@ -274,7 +275,7 @@ class hackspider:
 
         # na = str(str(tm) + ' ' + url + '.png').replace('http://', '').replace('https://', '').replace(':', ' ') \
         #     .replace('/', '_').replace('?', '%3F')
-        na = tm + self.getDomain(url) + '.png'
+        na = tm + ' ' + self.getDomain(url)
         na = "./hackimg/" + dire + "/" + na
 
         if not self.LINUX:
@@ -295,8 +296,13 @@ class hackspider:
             return na
         else:
             wait = str(self.TIMEOUT * 1000)
-            ret = os.system('xvfb-run --server-args="-screen 0, 1280x1200x24" cutycapt --max-wait=' + wait +
-                            ' --url=\'' + url + '\' --out=\'' + na + '\'')
+            ret = os.system('xvfb-run --server-args="-screen 0, 1366x768x24" cutycapt --max-wait=' + wait +
+                            ' --url=\'' + url + '\' --out=\'' + na + '.png\'')
+            os.system('convert \'' + na + '.png\' \''+na+'.jpg\'')
+            os.system('rm \'' + na + '\'.png')
+            os.system('convert -crop 1366x768+0+0 \'' + na + '.jpg\' \''+na+'.jpg\'')
+            os.system('convert -resize 40%x40% \'' + na + '.jpg\' \''+na+'.small.jpg\'')
+
             if ret == 0:
                 return na
             else:
@@ -380,9 +386,9 @@ class hackspider:
                 if ser.find('中国') != -1:
                     ret.append(ip)
                     if ser.find("\t") == 2:
-                        ret.append(re.findall("\t(.*)\t", ser))
+                        ret.append(str(re.findall("\t(.*)\t", ser)[0]))
                     else:
-                        ret.append(re.findall("\t(.*)", ser))
+                        ret.append(str(re.findall("\t(.*)", ser)[0]))
                     return ret
                 else:
                     return
