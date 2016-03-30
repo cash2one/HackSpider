@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="394287ad-b796-41d1-9df5-7e19701d93ad" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hackspider.py" afterPath="$PROJECT_DIR$/hackspider.py" />
     </list>
     <ignored path="hackspider.iws" />
@@ -32,7 +31,7 @@
       <file leaf-file-name="hackspider.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/hackspider.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.69868994">
+            <state vertical-scroll-proportion="0.44104803">
               <caret line="55" column="25" selection-start-line="55" selection-start-column="25" selection-end-line="55" selection-end-column="25" />
               <folding />
             </state>
@@ -540,7 +539,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/hackspider.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.69868994">
+        <state vertical-scroll-proportion="0.44104803">
           <caret line="55" column="25" selection-start-line="55" selection-start-column="25" selection-end-line="55" selection-end-column="25" />
           <folding />
         </state>

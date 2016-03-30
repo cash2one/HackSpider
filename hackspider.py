@@ -296,12 +296,12 @@ class hackspider:
             return na
         else:
             wait = str(self.TIMEOUT * 1000)
-            ret = os.system('xvfb-run --server-args="-screen 0, 1366x768x24" cutycapt --max-wait=' + wait +
+            ret = os.system('xvfb-run --server-args="-screen 0, 1000x700x24" cutycapt --max-wait=' + wait +
                             ' --url=\'' + url + '\' --out=\'' + na + '.png\'')
-            os.system('convert \'' + na + '.png\' \''+na+'.jpg\'')
-            os.system('rm \'' + na + '\'.png')
-            os.system('convert -crop 1366x768+0+0 \'' + na + '.jpg\' \''+na+'.jpg\'')
-            os.system('convert -resize 40%x40% \'' + na + '.jpg\' \''+na+'.small.jpg\'')
+            os.system('convert -quality 100 \'' + na + '.png\' \''+na+'.jpg\'')
+            # os.system('rm \'' + na + '\'.png')
+            os.system('convert -quality 100 -crop 1000x700+0+0 \'' + na + '.jpg\' \''+na+'.jpg\'')
+            os.system('convert -quality 100 -resize 40%x40% \'' + na + '.jpg\' \''+na+'.small.jpg\'')
 
             if ret == 0:
                 return na
@@ -425,8 +425,8 @@ if __name__ == '__main__':
     sp = hackspider()
     # sp.SAVE_SQL = False
     # sp.PRTSC = False
-    sp.echo(sp.getPageHack(1, 10), "1")
-    sp.echo(sp.getPageHack(2, 10), "2")
+    sp.echo(sp.getPageHack(1, 5), "1")
+    sp.echo(sp.getPageHack(2, 5), "2")
     # print(sp.getlastsql("1"))
     # print(sp.getlastsql("2"))
     # sp.echo(sp.getHack(1, sp.getlastsql("1")), "1")
