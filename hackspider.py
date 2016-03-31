@@ -386,7 +386,7 @@ class hackspider:
             else:
                 if ser.find('中国') != -1:
                     ret.append(ip)
-                    if ser.find("\t") == 2:
+                    if ser.count("\t") == 2:
                         ret.append(str(re.findall("\t(.*)\t", ser)[0]))
                     else:
                         ret.append(str(re.findall("\t(.*)", ser)[0]))
@@ -426,12 +426,8 @@ if __name__ == '__main__':
     while True:
         sp.echo(sp.getHack(1, sp.getlastsql("1")), "1")
         sp.echo(sp.getHack(2, sp.getlastsql("2")), "2")
-        print(time.strftime("%H-%M-%S", time.localtime()))
+        print(time.strftime("%m-%d %H:%M:%S", time.localtime()))
         sleep(1200)
-
-
-
-
     # sp.SAVE_SQL = False
     # sp.PRTSC = False
     # sp.echo(sp.getPageHack(1, 5), "1")
