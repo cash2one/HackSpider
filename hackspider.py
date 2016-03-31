@@ -1,6 +1,7 @@
 import requests
 import re
 import time
+from time import sleep
 import os
 import IP
 from urllib.parse import urlparse
@@ -299,7 +300,7 @@ class hackspider:
             ret = os.system('xvfb-run --server-args="-screen 0, 1000x700x24" cutycapt --max-wait=' + wait +
                             ' --url=\'' + url + '\' --out=\'' + na + '.png\'')
             os.system('convert -quality 100 \'' + na + '.png\' \''+na+'.jpg\'')
-            # os.system('rm \'' + na + '\'.png')
+            os.system('rm \'' + na + '\'.png')
             os.system('convert -quality 100 -crop 1000x700+0+0 \'' + na + '.jpg\' \''+na+'.jpg\'')
             os.system('convert -quality 100 -resize 40%x40% \'' + na + '.jpg\' \''+na+'.small.jpg\'')
 
@@ -421,14 +422,21 @@ class hackspider:
         return ret.locate
 
 if __name__ == '__main__':
-
     sp = hackspider()
+    while True:
+        sp.echo(sp.getHack(1, sp.getlastsql("1")), "1")
+        sp.echo(sp.getHack(2, sp.getlastsql("2")), "2")
+        print(time.strftime("%H-%M-%S", time.localtime()))
+        sleep(1200)
+
+
+
+
     # sp.SAVE_SQL = False
     # sp.PRTSC = False
-    sp.echo(sp.getPageHack(1, 5), "1")
-    sp.echo(sp.getPageHack(2, 5), "2")
+    # sp.echo(sp.getPageHack(1, 5), "1")
+    # sp.echo(sp.getPageHack(2, 5), "2")
     # print(sp.getlastsql("1"))
     # print(sp.getlastsql("2"))
-    # sp.echo(sp.getHack(1, sp.getlastsql("1")), "1")
-    # sp.echo(sp.getHack(2, sp.getlastsql("2")), "2")
+
 
