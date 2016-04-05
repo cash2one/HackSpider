@@ -300,11 +300,11 @@ class hackspider:
             try:
                 browser.get(url)
                 print(browser.title)
-                browser.save_screenshot(na)
+                browser.save_screenshot(na + '.jpg')
                 browser.quit()
             except TimeoutException:
                 print('time out after 20 seconds when loading page')
-                browser.save_screenshot(na)
+                browser.save_screenshot(na + '.jpg')
                 browser.quit()
                 # browser.execute_script('window.stop()')
             return na
@@ -481,6 +481,7 @@ if __name__ == '__main__':
         sp.echo(sp.getHack(2, sp.getlastsql("2")), "2")
         print(time.strftime("%m-%d %H:%M:%S", time.localtime()))
         sleep(1200)
+
 
     # sp.SAVE_SQL = False
     # sp.PRTSC = False
