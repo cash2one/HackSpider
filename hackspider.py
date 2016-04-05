@@ -484,5 +484,7 @@ if __name__ == '__main__':
 
     # sp.SAVE_SQL = False
     # sp.PRTSC = False
+    # sp.echo(sp.getPageHack(1, 10), "1")
+    # sp.echo(sp.getPageHack(2, 10), "2")
     # print(sp.getlastsql("1"))
     # print(sp.getlastsql("2"))
