@@ -23,8 +23,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import pycurl
 from io import BytesIO
 import base64
-
-# import chardet
+import chardet
 
 Base = declarative_base()
 
@@ -43,6 +42,7 @@ class Hack_spider(Base):  # 分组表
     time = Column(Integer)  # 时间
     pic = Column(String(500))  # 快照路径
     html = Column(MEDIUMTEXT)  # 黑页源码
+    title = Column(String(500))  # 黑页标题
     origin = Column(String(20))  # 采集来源
     locate = Column(String(500))  # 定位
 
@@ -343,9 +343,9 @@ class hackspider:
                 if not icp:
                     if self.SAVE_SQL:
                         self.addsql(self.getDomain(a[0]), a[0], ser[0], "无", "", "", "", ser[1], time.time(), pic,
-                                    html, hackOrigin, a[1])
-                        print(a[0], "Domain:", self.getDomain(a[0]), "Ip:", ser[0], "city:", ser[1], "没有备案",
-                              "Screenshot:", pic)
+                                    html[0], html[1], hackOrigin, a[1])
+                        print(a[0], "Domain:", self.getDomain(a[0]), "Title:", html[1], "Ip:", ser[0], "city:",
+                              ser[1], "没有备案", "Screenshot:", pic)
                     else:
                         print(a[0], "Domain:", self.getDomain(a[0]), "Ip:", ser[0], "city:", ser[1], "没有备案",
                               "Screenshot:", pic)
@@ -353,12 +353,14 @@ class hackspider:
                     if self.SAVE_SQL:
                         # domain, hackweb, ip, icp, icp_name, icp_webname, icp_st, city, time, pic, origin
                         self.addsql(self.getDomain(a[0]), a[0], ser[0], icp[2], icp[0], icp[1], icp[3], ser[1],
-                                    time.time(), pic, html, hackOrigin, a[1])
-                        print(a[0], "Domain:", self.getDomain(a[0]), "Ip:", ser[0], "city:", ser[1], "Com:", icp[0],
-                              "Name:", icp[1], "Number:", icp[2], "Property:", icp[3], "Screenshot:", pic)
+                                    time.time(), pic, html[0], html[1], hackOrigin, a[1])
+                        print(a[0], "Domain:", self.getDomain(a[0]), "Title:", html[1], "Ip:", ser[0], "city:", ser[1],
+                              "Com:", icp[0], "Name:", icp[1], "Number:", icp[2], "Property:", icp[3],
+                              "Screenshot:", pic)
                     else:
-                        print(a[0], "Domain:", self.getDomain(a[0]), "Ip:", ser[0], "city:", ser[1], "Com:", icp[0],
-                              "Name:", icp[1], "Number:", icp[2], "Property:", icp[3], "Screenshot:", pic)
+                        print(a[0], "Domain:", self.getDomain(a[0]), "Title:", html[1], "Ip:", ser[0], "city:", ser[1],
+                              "Com:", icp[0], "Name:", icp[1], "Number:", icp[2], "Property:", icp[3],
+                              "Screenshot:", pic)
             else:
                 print(a[0], "无法访问或者不是国内网站,跳过...")
         print('done')
@@ -412,7 +414,8 @@ class hackspider:
             print(e)
             return
 
-    def addsql(self, domain, hackweb, ip, icp, icp_name, icp_webname, icp_st, city, time, pic, html, origin, locate):
+    def addsql(self, domain, hackweb, ip, icp, icp_name, icp_webname, icp_st, city, time, pic, html, title, origin,
+               locate):
         """
         # 存入数据库
         """
@@ -420,7 +423,7 @@ class hackspider:
             session = self.DBSession()
             sql = Hack_spider(domain=domain, hackweb=hackweb, ip=ip, icp=icp, icp_name=icp_name,
                               icp_webname=icp_webname,
-                              icp_st=icp_st, city=city, time=int(time), pic=pic, html=html, origin=origin,
+                              icp_st=icp_st, city=city, time=int(time), pic=pic, html=html, title=title, origin=origin,
                               locate=locate)
             session.add(sql)
             session.commit()
@@ -443,6 +446,7 @@ class hackspider:
             :param url:
             :return:
             """
+        Arr = []
         b = BytesIO()
         c = pycurl.Curl()
         c.setopt(pycurl.CONNECTTIMEOUT, 15)
@@ -466,12 +470,28 @@ class hackspider:
             c.perform()
             html = b.getvalue()
             b.flush()
-            return base64.b64encode(html)
-
+            Arr.append(base64.b64encode(html))
+            if chardet.detect(html)['encoding'].lower().find('utf-8') != -1:
+                title = re.findall("<title>(.*)</title>", html.decode())
+                if title:
+                    Arr.append(title[0])
+                else:
+                    Arr.append('')
+                return Arr
+            else:
+                title = re.findall("<title>(.*)</title>", html.decode('gbk'))
+                if title:
+                    Arr.append(title[0])
+                else:
+                    Arr.append('')
+                return Arr
         except Exception as err:
             print(err)
             b.flush()
-            return 'error'
+            Arr.clear()
+            Arr.append('error')
+            Arr.append('')
+            return Arr
 
 
 if __name__ == '__main__':
@@ -482,10 +502,9 @@ if __name__ == '__main__':
         print(time.strftime("%m-%d %H:%M:%S", time.localtime()))
         sleep(1200)
 
-
     # sp.SAVE_SQL = False
     # sp.PRTSC = False
-    # sp.echo(sp.getPageHack(1, 10), "1")
-    # sp.echo(sp.getPageHack(2, 10), "2")
+    # sp.echo(sp.getPageHack(1, 5), "1")
+    # sp.echo(sp.getPageHack(2, 5), "2")
     # print(sp.getlastsql("1"))
     # print(sp.getlastsql("2"))
