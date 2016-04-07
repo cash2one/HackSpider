@@ -35,6 +35,7 @@ class Hack_spider(Base):  # 分组表
     hackweb = Column(String(500))  # 黑页
     ip = Column(String(500))  # IP
     icp = Column(String(500), default="")  # ICP
+    icp_city = Column(String(10), default="")  # ICP
     icp_name = Column(String(500), default=None)  # 备案单位
     icp_webname = Column(String(500), default=None)  # 备案网站名
     icp_st = Column(String(500), default=None)  # 备案类型
@@ -174,7 +175,6 @@ class hackspider:
                 print(time.strftime("%H:%M:%S", time.localtime()), "hackcn列表读取完毕,开始读取Url.")
                 allurl = re.findall(self.hackcnweb, r.text)
                 i = 0
-                print(allurl)
                 for a in allurl:
                     try:
                         m = re.findall('(\w*[0-9]+)\w*', a)
@@ -342,7 +342,7 @@ class hackspider:
                     pic = ""
                 if not icp:
                     if self.SAVE_SQL:
-                        self.addsql(self.getDomain(a[0]), a[0], ser[0], "无", "", "", "", ser[1], time.time(), pic,
+                        self.addsql(self.getDomain(a[0]), a[0], ser[0], "无", "未备案", "", "", "", ser[1], time.time(), pic,
                                     html[0], html[1], hackOrigin, a[1])
                         print(a[0], "Domain:", self.getDomain(a[0]), "Title:", html[1], "Ip:", ser[0], "city:",
                               ser[1], "没有备案", "Screenshot:", pic)
@@ -352,8 +352,8 @@ class hackspider:
                 else:
                     if self.SAVE_SQL:
                         # domain, hackweb, ip, icp, icp_name, icp_webname, icp_st, city, time, pic, origin
-                        self.addsql(self.getDomain(a[0]), a[0], ser[0], icp[2], icp[0], icp[1], icp[3], ser[1],
-                                    time.time(), pic, html[0], html[1], hackOrigin, a[1])
+                        self.addsql(self.getDomain(a[0]), a[0], ser[0], icp[2], icp[2][0], icp[0], icp[1], icp[3],
+                                    ser[1], time.time(), pic, html[0], html[1], hackOrigin, a[1])
                         print(a[0], "Domain:", self.getDomain(a[0]), "Title:", html[1], "Ip:", ser[0], "city:", ser[1],
                               "Com:", icp[0], "Name:", icp[1], "Number:", icp[2], "Property:", icp[3],
                               "Screenshot:", pic)
@@ -414,17 +414,16 @@ class hackspider:
             print(e)
             return
 
-    def addsql(self, domain, hackweb, ip, icp, icp_name, icp_webname, icp_st, city, time, pic, html, title, origin,
-               locate):
+    def addsql(self, domain, hackweb, ip, icp, icp_city, icp_name, icp_webname, icp_st, city, time, pic, html,
+               title, origin, locate):
         """
         # 存入数据库
         """
         try:
             session = self.DBSession()
-            sql = Hack_spider(domain=domain, hackweb=hackweb, ip=ip, icp=icp, icp_name=icp_name,
-                              icp_webname=icp_webname,
-                              icp_st=icp_st, city=city, time=int(time), pic=pic, html=html, title=title, origin=origin,
-                              locate=locate)
+            sql = Hack_spider(domain=domain, hackweb=hackweb, ip=ip, icp=icp, icp_city=icp_city, icp_name=icp_name,
+                              icp_webname=icp_webname, icp_st=icp_st, city=city, time=int(time), pic=pic, html=html,
+                              title=title, origin=origin, locate=locate)
             session.add(sql)
             session.commit()
             session.close()
@@ -438,6 +437,7 @@ class hackspider:
         session = self.DBSession()
         query = session.query(Hack_spider)
         ret = query.filter(Hack_spider.origin == origin).order_by(Hack_spider.id.desc()).first()
+        session.close()
         return ret.locate
 
     def curl(self, url):
