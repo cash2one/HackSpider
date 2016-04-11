@@ -149,11 +149,15 @@ class hackspider:
                     r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
                 except Exception as e:
                     print(e)
-                    urlArr.clear()
                     return urlArr
                 print(time.strftime("%H:%M:%S", time.localtime()), "hacker读取完毕,开始处理.")
                 allurl = re.findall(self.hackerurl, r.text)
                 i = 0
+                if not allurl:
+                    RUN = False
+                    urlArr.clear()
+                    print(time.strftime("%H:%M:%S", time.localtime()), "hacker第"+str(COUNT)+"页获取出错.")
+                    return urlArr
 
                 for a in allurl:
                     if a != last:
@@ -172,9 +176,16 @@ class hackspider:
                     r = s.get(url, headers=self.HEADER)
                 except Exception as e:
                     print(e)
+                    return urlArr
                 print(time.strftime("%H:%M:%S", time.localtime()), "hackcn列表读取完毕,开始读取Url.")
                 allurl = re.findall(self.hackcnweb, r.text)
                 i = 0
+                if not allurl:
+                    RUN = False
+                    urlArr.clear()
+                    print(time.strftime("%H:%M:%S", time.localtime()), "hackcn第"+str(COUNT)+"页获取出错.")
+                    return urlArr
+
                 for a in allurl:
                     try:
                         m = re.findall('(\w*[0-9]+)\w*', a)
@@ -223,8 +234,15 @@ class hackspider:
                     r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
                 except Exception as e:
                     print(e)
+                    urlArr.clear()
+                    return urlArr
                 print(time.strftime("%H:%M:%S", time.localtime()), "hacker读取完毕,开始处理.")
                 allurl = re.findall(self.hackerurl, r.text)
+                if not allurl:
+                    urlArr.clear()
+                    print(time.strftime("%H:%M:%S", time.localtime()), "hacker第"+str(COUNT)+"页获取出错.")
+                    return urlArr
+
                 for a in allurl:
                     urlArr.append([a, a])
 
@@ -243,8 +261,14 @@ class hackspider:
                     r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
                 except Exception as e:
                     print(e)
+                    urlArr.clear()
+                    return urlArr
                 print(time.strftime("%H:%M:%S", time.localtime()), "hackcn列表读取完毕,开始读取Url.")
                 allurl = re.findall(self.hackcnweb, r.text)
+                if not allurl:
+                    urlArr.clear()
+                    print(time.strftime("%H:%M:%S", time.localtime()), "hackcn第"+str(COUNT)+"页获取出错.")
+                    return urlArr
 
                 for a in allurl:
                     try:
@@ -501,7 +525,6 @@ if __name__ == '__main__':
         sp.echo(sp.getHack(2, sp.getlastsql("2")), "2")
         print(time.strftime("%m-%d %H:%M:%S", time.localtime()))
         sleep(1200)
-
     # sp.SAVE_SQL = False
     # sp.PRTSC = False
     # sp.echo(sp.getPageHack(1, 5), "1")
