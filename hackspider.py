@@ -67,9 +67,9 @@ class hackspider:
         # --------------------------------------------
         if self.SAVE_SQL:
             self.SQL_HOST = '127.0.0.1'
-            self.SQL_USER = 'app'
-            self.SQL_PASS = 'joEDygcT5JWIKnpS'
-            self.SQL_DB = 'app_webstatus'
+            self.SQL_USER = 'root'
+            self.SQL_PASS = 'root'
+            self.SQL_DB = 'app'
             self.SQL_PORT = 3306
             self.SQL_CHAR = 'utf8'
             engine = create_engine(
@@ -156,7 +156,7 @@ class hackspider:
                 if not allurl:
                     RUN = False
                     urlArr.clear()
-                    print(time.strftime("%H:%M:%S", time.localtime()), "hacker第"+str(COUNT)+"页获取出错.")
+                    print(time.strftime("%H:%M:%S", time.localtime()), "hacker第" + str(COUNT) + "页获取出错.")
                     return urlArr
 
                 for a in allurl:
@@ -183,13 +183,13 @@ class hackspider:
                 if not allurl:
                     RUN = False
                     urlArr.clear()
-                    print(time.strftime("%H:%M:%S", time.localtime()), "hackcn第"+str(COUNT)+"页获取出错.")
+                    print(time.strftime("%H:%M:%S", time.localtime()), "hackcn第" + str(COUNT) + "页获取出错.")
                     return urlArr
 
                 for a in allurl:
                     try:
                         m = re.findall('(\w*[0-9]+)\w*', a)
-                        if m[0] != last:
+                        if m[0] > last:
                             url = "http://www.hack-cn.com/" + str(a)
                             r = s.get(url, headers=self.HEADER, timeout=self.TIMEOUT)
                             blackurl = re.findall(self.hackcnu, r.text)
@@ -240,7 +240,7 @@ class hackspider:
                 allurl = re.findall(self.hackerurl, r.text)
                 if not allurl:
                     urlArr.clear()
-                    print(time.strftime("%H:%M:%S", time.localtime()), "hacker第"+str(COUNT)+"页获取出错.")
+                    print(time.strftime("%H:%M:%S", time.localtime()), "hacker第" + str(COUNT) + "页获取出错.")
                     return urlArr
 
                 for a in allurl:
@@ -267,7 +267,7 @@ class hackspider:
                 allurl = re.findall(self.hackcnweb, r.text)
                 if not allurl:
                     urlArr.clear()
-                    print(time.strftime("%H:%M:%S", time.localtime()), "hackcn第"+str(COUNT)+"页获取出错.")
+                    print(time.strftime("%H:%M:%S", time.localtime()), "hackcn第" + str(COUNT) + "页获取出错.")
                     return urlArr
 
                 for a in allurl:
@@ -304,18 +304,18 @@ class hackspider:
         # tm = time.strftime("%m-%d %H-%M-%S", time.localtime())
         tm = time.strftime("%H-%M-%S", time.localtime())
         dire = time.strftime("%m-%d", time.localtime())
-        if os.path.exists("./hackimg/"):
-            if not os.path.exists("./hackimg/" + dire + "/"):
-                os.mkdir("./hackimg/" + dire + "/")
+        if os.path.exists("./Public/img/hackimg/"):
+            if not os.path.exists("./Public/img/hackimg/" + dire + "/"):
+                os.mkdir("./Public/img/hackimg/" + dire + "/")
         else:
-            os.mkdir("./hackimg/")
-            if not os.path.exists("./hackimg/" + dire + "/"):
-                os.mkdir("./hackimg/" + dire + "/")
+            os.mkdir("./Public/img/hackimg/")
+            if not os.path.exists("./Public/img/hackimg/" + dire + "/"):
+                os.mkdir("./Public/img/hackimg/" + dire + "/")
 
         # na = str(str(tm) + ' ' + url + '.png').replace('http://', '').replace('https://', '').replace(':', ' ') \
         #     .replace('/', '_').replace('?', '%3F')
         na = tm + ' ' + self.getDomain(url)
-        na = "./hackimg/" + dire + "/" + na
+        na = "./Public/img/hackimg/" + dire + "/" + na
 
         if not self.LINUX:
             browser = webdriver.Chrome()
@@ -366,7 +366,8 @@ class hackspider:
                     pic = ""
                 if not icp:
                     if self.SAVE_SQL:
-                        self.addsql(self.getDomain(a[0]), a[0], ser[0], "无", "未备案", "", "", "", ser[1], time.time(), pic,
+                        self.addsql(self.getDomain(a[0]), a[0], ser[0], "无", "未备案", "", "", "", ser[1], time.time(),
+                                    pic,
                                     html[0], html[1], hackOrigin, a[1])
                         print(a[0], "Domain:", self.getDomain(a[0]), "Title:", html[1], "Ip:", ser[0], "city:",
                               ser[1], "没有备案", "Screenshot:", pic)
@@ -517,17 +518,25 @@ class hackspider:
             Arr.append('')
             return Arr
 
+    def initialize(self, page=1):
+        session = self.DBSession()
+        query = session.query(Hack_spider)
+        o1 = query.filter(Hack_spider.origin == 1).first()
+        o2 = query.filter(Hack_spider.origin == 2).first()
+        session.close()
+        if o1 is None:
+            print('hacker没有数据,进行初始化采集,采集前', page, '页内容.')
+            sp.echo(sp.getPageHack(1, page), "1")
+        if o2 is None:
+            print('hackcn没有数据,进行初始化采集,采集前', page, '页内容.')
+            sp.echo(sp.getPageHack(2, page), "2")
+
 
 if __name__ == '__main__':
     sp = hackspider()
+    sp.initialize(1)
     while True:
         sp.echo(sp.getHack(1, sp.getlastsql("1")), "1")
         sp.echo(sp.getHack(2, sp.getlastsql("2")), "2")
         print(time.strftime("%m-%d %H:%M:%S", time.localtime()))
         sleep(1200)
-    # sp.SAVE_SQL = False
-    # sp.PRTSC = False
-    # sp.echo(sp.getPageHack(1, 5), "1")
-    # sp.echo(sp.getPageHack(2, 5), "2")
-    # print(sp.getlastsql("1"))
-    # print(sp.getlastsql("2"))
